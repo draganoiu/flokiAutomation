@@ -1,48 +1,41 @@
-import { Page } from 'playwright';
+import { Locator, Page } from 'playwright';
 
 export class GamePage {
-    private page: Page;
-
+    readonly page: Page;
+    readonly column: Locator;
+    readonly success: Locator;
+    readonly winningElement: Locator;
+ 
     constructor(page: Page) {
         this.page = page;
+        this.column = page.locator('.flex.cursor-pointer.flex-col.justify-center.space-y-2.rounded.border-b.border-t.border-transparent.px-1.py-2.transition-colors.duration-300.hover\\:border-white');
+        this.success = page.locator(".flex.flex-col.justify-center.space-y-2.rounded.border-b.border-t.border-transparent.px-1.py-2.transition-colors.duration-300.cursor-not-allowed.hover\\:border-transparent:nth-of-type(1)");
+        this.winningElement = page.locator('.grid.aspect-square.w-\\[50vw\\].max-w-\\[180px\\].place-items-center.rounded-full.transition-colors.duration-500.bg-white');
     }
 
-   
-    
-    async firstPlayerWon():Promise<void> {
-        const selector = '.flex.cursor-pointer.flex-col.justify-center.space-y-2.rounded.border-b.border-t.border-transparent.px-1.py-2.transition-colors.duration-300.hover\\:border-white';
-    //I selected the first column until the forth and I double clicked on each column 
-        for (let i = 0; i <= 3; i++) {
-            const element = this.page.locator(`${selector}:nth-of-type(${i + 1})`);
-             await element.click()
-             await this.page.waitForTimeout(2000)
-             if(i<3){
-             await element.click()
+    async firstPlayerWon(): Promise<void> {
+        for (let i = 0; i < 4; i++) {
+            const element = this.column.nth(i);
+            await element.click();
 
-             }
-             else console.log("the First user WON")
-             
+            if (i < 3) {
+                await element.click();
+            } else {
+                console.log("The first user WON");
+            }
         }
     }
 
-   
-    async checkTheSuccess(): Promise<string | null> {
-        //I verified the atribute aria-disabled to be true 
-        const selector = '.flex.flex-col.justify-center.space-y-2.rounded.border-b.border-t.border-transparent.px-1.py-2.transition-colors.duration-300.cursor-not-allowed.hover\\:border-transparent:nth-of-type(1)';
+    async checkTheSuccess(): Promise<boolean> {
+        // Check if the success element has aria-disabled="true"
+        const ariaDisabledValue = await this.success.getAttribute('aria-disabled');
+        const isDisabled = ariaDisabledValue === 'true';
 
-        
-        const element = this.page.locator(selector);
-        
-        const ariaDisabledValue = await element.getAttribute('aria-disabled');
-        
-        return  ariaDisabledValue;
+        // Check if the winning class is present
+        const hasWinningClass = await this.winningElement.count() > 0;
+
+        //console.log(hasWinningClass)
+        // Return true if both conditions are met
+        return isDisabled && hasWinningClass;
     }
-    
-    
-    
-    
-    
-    
-
-    
 }

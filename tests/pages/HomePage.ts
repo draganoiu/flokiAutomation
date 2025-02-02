@@ -1,24 +1,35 @@
-import { Page } from 'playwright';
+import { Locator, Page,Response  } from 'playwright';
 
 export class HomePage {
-    private page: Page;
+    readonly page: Page;
+    readonly newGame: Locator;
 
     constructor(page: Page) {
         this.page = page;
+        this.newGame = page.locator('.text-2xl.font-semibold:has-text("Start Game")')
     }
 
     // Method to start a new game
     async startNewGame() {
-        // Assuming a button with ID 'start-game' to start a new game
-
-        await this.page.goto('http://localhost:5173/')
-        await this.page.click('.text-2xl.font-semibold:has-text("Start Game")');
+        await this.page.goto('/'); 
+        await this.newGame.click();
 
         // Wait for the URL to change to the new game's page
-        await this.page.waitForURL('http://localhost:5173/games/*'); 
-        await this.page.waitForTimeout(2000)
+       // await this.page.waitForURL('/*'); 
         
-       
+   
+    }
+
+
+    async getGameId(): Promise<string> {
+        // Apelăm startNewGame pentru a apăsa pe buton și a obține ID-ul
+        await this.startNewGame();
+
+        // Așteptăm răspunsul de la API
+        const apiResponse = await this.page.waitForResponse('http://localhost:3000/games');
         
+        // Extragem și returnăm ID-ul din răspunsul JSON
+        const responseBody = await apiResponse.json();
+        return responseBody.id;
     }
 }
